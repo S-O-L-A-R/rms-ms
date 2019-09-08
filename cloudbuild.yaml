@@ -3,6 +3,8 @@ steps:
 - name: 'gcr.io/cloud-builders/git'
   args: ['clone', 'https://github.com/S-O-L-A-R/rms-ms.git']
 
+- name: 'gcr.io/cloud-builders/git'
+  args: ['checkout', 'deployment']
 
 - name: 'gcr.io/cloud-builders/mvn'
   args: ['install']
