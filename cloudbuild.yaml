@@ -5,6 +5,8 @@ steps:
 
 - name: 'gcr.io/cloud-builders/git'
   args: ['checkout', 'deployment']
+  dir: 'rms-ms'
+
 
 - name: 'gcr.io/cloud-builders/mvn'
   args: ['install']
