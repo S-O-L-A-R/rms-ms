@@ -28,7 +28,7 @@ public class TestController {
         return ResponseEntity.ok(payload);
     }
 
-    @PostMapping("/v1/test")
+    @PostMapping("/v1/firebase")
     public ResponseEntity<String> testFireBase(@RequestBody String payload) throws ExecutionException, InterruptedException {
         DocumentReference docRef = firestore.collection("users").document("alovelace");
         // Add document data  with id "alovelace" using a hashmap
