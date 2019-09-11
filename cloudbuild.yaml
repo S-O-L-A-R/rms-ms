@@ -3,6 +3,10 @@ steps:
 - name: 'gcr.io/cloud-builders/git'
   args: ['clone', 'https://github.com/S-O-L-A-R/rms-ms.git']
 
+- name: 'gcr.io/cloud-builders/git'
+  args: ['checkout', 'deployment']
+  dir: 'rms-ms'
+
 
 - name: 'gcr.io/cloud-builders/mvn'
   args: ['install']
@@ -16,18 +20,18 @@ steps:
   args: [
     'build',
     '-t',
-    'gcr.io/$PROJECT_ID/rms-ms:$TAG_NAME',
+    'gcr.io/$PROJECT_ID/rms-ms:$BRANCH_NAME-$COMMIT_SHA',
     '-t',
     'gcr.io/$PROJECT_ID/rms-ms:latest',
     '.'
   ]
 
-##step 3
-#- name: 'gcr.io/cloud-builders/kubectl'
-#  args: ['apply', '-f', 'k8s/']
-#  env:
-#  - 'CLOUDSDK_COMPUTE_ZONE=<cluster-zone>'
-#  - 'CLOUDSDK_CONTAINER_CLUSTER=<cluster-name>'
+#step 3
+- name: 'gcr.io/cloud-builders/kubectl'
+  args: ['apply', '-f', 'k8s/']
+  env:
+  - 'CLOUDSDK_COMPUTE_ZONE=${_GKE_COMPUTE_ZONE}'
+  - 'CLOUDSDK_CONTAINER_CLUSTER=${_GKE_CLUSTER_NAME}'
 
 #step 4
 - name: 'gcr.io/cloud-builders/kubectl'
@@ -36,14 +40,14 @@ steps:
     'image',
     'deployment',
     'rms-ms',
-    'rms-ms=gcr.io/$PROJECT_ID/rms-ms:$TAG_NAME'
+    'rms-ms=gcr.io/$PROJECT_ID/rms-ms:$BRANCH_NAME-$COMMIT_SHA'
   ]
-#  env:
-#  - 'CLOUDSDK_COMPUTE_ZONE=<cluster-zone>'
-#  - 'CLOUDSDK_CONTAINER_CLUSTER=<cluster-name>'
+  env:
+  - 'CLOUDSDK_COMPUTE_ZONE=${_GKE_COMPUTE_ZONE}'
+  - 'CLOUDSDK_CONTAINER_CLUSTER=${_GKE_CLUSTER_NAME}'
+  
 # push images to Google Container Registry with tags
-
 images: [
-  'gcr.io/$PROJECT_ID/rms-ms:$TAG_NAME',
+  'gcr.io/$PROJECT_ID/rms-ms:$BRANCH_NAME-$COMMIT_SHA',
   'gcr.io/$PROJECT_ID/rms-ms:latest'
 ]
