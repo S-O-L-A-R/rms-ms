@@ -1,4 +1,4 @@
-package com.solar.ms.restaurantmanagementsystem;
+package com.solar.ms.rms;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;

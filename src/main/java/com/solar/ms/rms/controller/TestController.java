@@ -1,4 +1,4 @@
-package com.solar.ms.restaurantmanagementsystem.controller;
+package com.solar.ms.rms.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;

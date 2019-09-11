@@ -1,4 +1,4 @@
-package com.solar.ms.restaurantmanagementsystem;
+package com.solar.ms.rms;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
