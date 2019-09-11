@@ -51,6 +51,13 @@
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-kubernetes-ribbon</artifactId>
 		</dependency>
+
+		<!--FIREBASE-->
+		<dependency>
+			<groupId>com.google.firebase</groupId>
+			<artifactId>firebase-admin</artifactId>
+			<version>6.10.0</version>
+		</dependency>
 	</dependencies>
 
     <dependencyManagement>
