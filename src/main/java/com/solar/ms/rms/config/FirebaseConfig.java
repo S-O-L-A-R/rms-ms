@@ -31,7 +31,8 @@ public class FirebaseConfig {
 
         FirebaseOptions options = new FirebaseOptions.Builder()
                 .setCredentials(credentials)
-                .setDatabaseUrl("https://vaulted-channel-252309.firebaseio.com")
+                .setProjectId(projectId)
+//                .setDatabaseUrl("https://vaulted-channel-252309.firebaseio.com")
                 .build();
         FirebaseApp.initializeApp(options);
 
