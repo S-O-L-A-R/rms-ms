@@ -4,7 +4,7 @@ steps:
   args: ['clone', 'https://github.com/S-O-L-A-R/rms-ms.git']
 
 - name: 'gcr.io/cloud-builders/git'
-  args: ['checkout', 'deployment']
+  args: ['checkout', '$BRANCH_NAME']
   dir: 'rms-ms'
 
 
