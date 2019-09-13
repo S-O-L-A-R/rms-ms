@@ -21,7 +21,7 @@ import java.io.InputStream;
 @Configuration
 public class FirebaseConfig {
 
-    @Value("${firebase.project-id:vaulted-channel-252309}")
+    @Value("${firebase.project-id}")
     private String projectId;
 
     @Bean
