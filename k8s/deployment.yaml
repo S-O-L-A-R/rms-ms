@@ -29,3 +29,8 @@ spec:
         env:
         - name: GOOGLE_APPLICATION_CREDENTIALS
           value: /var/secrets/google/key.json
+        - name: application-secret
+          valueFrom:
+            secretKeyRef:
+              name: rms-ms
+              key: application-secret
