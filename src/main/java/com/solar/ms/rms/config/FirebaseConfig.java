@@ -1,5 +1,6 @@
 package com.solar.ms.rms.config;
 
+import com.google.auth.oauth2.AccessToken;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.firestore.Firestore;
 import com.google.firebase.FirebaseApp;
@@ -18,6 +19,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Date;
 
 @Configuration
 public class FirebaseConfig {
@@ -25,51 +27,56 @@ public class FirebaseConfig {
     @Value("${firebase.project-id}")
     private String projectId;
 
-
+    @Value("${firebase.storage-bucket}")
+    private String storageBucket;
 
     @Bean
-    @Primary
     @Profile("local")
-    public Firestore getFirestoreLocal() throws IOException {
+    public FirebaseApp getFirebaseAppLocal() throws IOException {
         InputStream serviceAccount = new FileInputStream(ResourceUtils.getFile("classpath:keys/firebase-sa.json"));
         GoogleCredentials credentials = GoogleCredentials.fromStream(serviceAccount);
 
         FirebaseOptions options = new FirebaseOptions.Builder()
                 .setCredentials(credentials)
                 .setProjectId(projectId)
-                .setStorageBucket("vaulted-channel-252309.appspot.com")
+                .setStorageBucket(storageBucket)
                 .build();
-        FirebaseApp.initializeApp(options);
-
-        return FirestoreClient.getFirestore();
+        return FirebaseApp.initializeApp(options);
     }
 
     @Bean
-    @Primary
-    @Profile("local")
-    public StorageClient getStorageClientLocal() throws IOException {
-//        InputStream serviceAccount = new FileInputStream(ResourceUtils.getFile("classpath:keys/firebase-sa.json"));
-//        GoogleCredentials credentials = GoogleCredentials.fromStream(serviceAccount);
-//
-//        FirebaseOptions options = new FirebaseOptions.Builder()
-//                .setCredentials(credentials)
-//                .setProjectId(projectId)
-//                .build();
-//        FirebaseApp.initializeApp(options);
+    @Profile("deployment")
+    public FirebaseApp getFirebaseAppDeployment() {
+        GoogleCredentials credentials = GoogleCredentials.create(new AccessToken("MOCK", new Date()));
 
-        return StorageClient.getInstance();
+        FirebaseOptions options = new FirebaseOptions.Builder()
+                .setCredentials(credentials)
+                .setProjectId(projectId)
+                .setStorageBucket(storageBucket)
+                .build();
+        return FirebaseApp.initializeApp(options);
     }
 
     @Bean
     @ConditionalOnMissingBean
-    public Firestore getFirestore() throws IOException {
+    public FirebaseApp getFirebaseApp() throws IOException {
         GoogleCredentials credentials = GoogleCredentials.getApplicationDefault();
+
         FirebaseOptions options = new FirebaseOptions.Builder()
                 .setCredentials(credentials)
                 .setProjectId(projectId)
+                .setStorageBucket(storageBucket)
                 .build();
-        FirebaseApp.initializeApp(options);
+        return FirebaseApp.initializeApp(options);
+    }
 
+    @Bean
+    public Firestore getFirestore(){
         return FirestoreClient.getFirestore();
+    }
+
+    @Bean
+    public StorageClient getStorageClient(){
+        return StorageClient.getInstance();
     }
 }
