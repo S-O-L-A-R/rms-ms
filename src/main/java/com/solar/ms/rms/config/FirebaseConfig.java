@@ -5,6 +5,7 @@ import com.google.cloud.firestore.Firestore;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.cloud.FirestoreClient;
+import com.google.firebase.cloud.StorageClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
@@ -24,6 +25,8 @@ public class FirebaseConfig {
     @Value("${firebase.project-id}")
     private String projectId;
 
+
+
     @Bean
     @Primary
     @Profile("local")
@@ -34,10 +37,27 @@ public class FirebaseConfig {
         FirebaseOptions options = new FirebaseOptions.Builder()
                 .setCredentials(credentials)
                 .setProjectId(projectId)
+                .setStorageBucket("vaulted-channel-252309.appspot.com")
                 .build();
         FirebaseApp.initializeApp(options);
 
         return FirestoreClient.getFirestore();
+    }
+
+    @Bean
+    @Primary
+    @Profile("local")
+    public StorageClient getStorageClientLocal() throws IOException {
+//        InputStream serviceAccount = new FileInputStream(ResourceUtils.getFile("classpath:keys/firebase-sa.json"));
+//        GoogleCredentials credentials = GoogleCredentials.fromStream(serviceAccount);
+//
+//        FirebaseOptions options = new FirebaseOptions.Builder()
+//                .setCredentials(credentials)
+//                .setProjectId(projectId)
+//                .build();
+//        FirebaseApp.initializeApp(options);
+
+        return StorageClient.getInstance();
     }
 
     @Bean

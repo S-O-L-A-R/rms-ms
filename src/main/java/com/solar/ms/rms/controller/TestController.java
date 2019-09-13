@@ -4,16 +4,16 @@ import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.WriteResult;
+import com.google.firebase.cloud.StorageClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -32,6 +32,8 @@ public class TestController {
 
     @Autowired
     private Firestore firestore;
+    @Autowired
+    private StorageClient storageClient;
 
     @PostMapping("/v1/test")
     public ResponseEntity<String> testEndpoint(@RequestBody String payload) throws ExecutionException, InterruptedException {
@@ -72,5 +74,21 @@ public class TestController {
         data.put("secret", secretProp);
 
         return ResponseEntity.ok(data);
+    }
+
+    @PostMapping("/v1/upload")
+    public ResponseEntity<String> handleFileUpload(@RequestParam("file") MultipartFile file) throws IOException {
+
+        log.info("{}", file.getOriginalFilename());
+
+
+        storageClient.bucket().create(file.getOriginalFilename(), file.getInputStream());
+//        storageService.store(file);
+//        redirectAttributes.addFlashAttribute("message",
+//                "You successfully uploaded " + file.getOriginalFilename() + "!");
+//
+//        return "redirect:/";
+
+        return ResponseEntity.ok("OK");
     }
 }
