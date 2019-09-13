@@ -27,6 +27,8 @@ public class TestController {
     public String appTestProp;
     @Value("${rms-ms-test:default}")
     public String rmsTestProp;
+    @Value("${application-secret:default}")
+    public String secretProp;
 
     @Autowired
     private Firestore firestore;
@@ -60,6 +62,14 @@ public class TestController {
         Map<String, String> data = new HashMap<>();
         data.put("app", appTestProp);
         data.put("rms", rmsTestProp);
+
+        return ResponseEntity.ok(data);
+    }
+
+    @GetMapping("/v1/secret")
+    public ResponseEntity<?> testSecret(){
+        Map<String, String> data = new HashMap<>();
+        data.put("secret", secretProp);
 
         return ResponseEntity.ok(data);
     }
