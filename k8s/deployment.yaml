@@ -14,8 +14,18 @@ spec:
       labels:
         run: rms-ms
     spec:
+      volumes:
+      - name: google-cloud-key
+        secret:
+          secretName: firebase-key
       containers:
       - image: gcr.io/vaulted-channel-252309/rms-ms:latest
         name: rms-ms
         ports:
         - containerPort: 8080
+        volumeMounts:
+        - name: google-cloud-key
+          mountPath: /var/secrets/google
+        env:
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /var/secrets/google/key.json
