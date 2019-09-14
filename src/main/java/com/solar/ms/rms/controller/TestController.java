@@ -5,6 +5,10 @@ import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.WriteResult;
 import com.google.firebase.cloud.StorageClient;
+import com.solar.ms.rms.model.line.LineMessage;
+import com.solar.ms.rms.model.line.LineMessageRequest;
+import com.solar.ms.rms.service.LineMessageService;
+import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
@@ -34,6 +39,8 @@ public class TestController {
     private Firestore firestore;
     @Autowired
     private StorageClient storageClient;
+    @Autowired
+    private LineMessageService lineMessageService;
 
     @PostMapping("/v1/test")
     public ResponseEntity<String> testEndpoint(@RequestBody String payload) throws ExecutionException, InterruptedException {
@@ -83,11 +90,13 @@ public class TestController {
 
 
         storageClient.bucket().create(file.getOriginalFilename(), file.getInputStream());
-//        storageService.store(file);
-//        redirectAttributes.addFlashAttribute("message",
-//                "You successfully uploaded " + file.getOriginalFilename() + "!");
-//
-//        return "redirect:/";
+
+        return ResponseEntity.ok("OK");
+    }
+
+    @PostMapping("/v1/message/broadcast")
+    public ResponseEntity<String> sendBroadcastMessage(@RequestBody List<LineMessage> messages){
+        lineMessageService.sendBroadCastMessage(messages);
 
         return ResponseEntity.ok("OK");
     }
