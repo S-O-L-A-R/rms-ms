@@ -1,7 +1,7 @@
 package com.solar.ms.rms.service;
 
 import com.solar.ms.rms.model.line.LineMessage;
-import com.solar.ms.rms.model.line.PushLineMessageRequest;
+import com.solar.ms.rms.model.line.LineMessageRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,14 +30,30 @@ public class LineMessageService {
     @Value("${service.line.push-message.url}")
     private String pushMessageUrl;
 
+    @Value("${service.line.broadcast-message.url}")
+    private String broadcastMessageUrl;
+
     public ResponseEntity<String> sendPushMessage(String to, List<LineMessage> messages){
         httpHeaders.set(HttpHeaders.AUTHORIZATION, AUTHORIZATION_HEADER_BEARER + channelAccessToken);
-        PushLineMessageRequest pushLineMessageRequest = new PushLineMessageRequest(to, messages);
+        LineMessageRequest lineMessageRequest = new LineMessageRequest(to, messages);
 
         return restTemplate.exchange(
                 pushMessageUrl,
                 HttpMethod.POST,
-                new HttpEntity<>(pushLineMessageRequest, httpHeaders),
+                new HttpEntity<>(lineMessageRequest, httpHeaders),
+                String.class
+        );
+    }
+
+    public ResponseEntity<String> sendBroadCastMessage(List<LineMessage> messages){
+        httpHeaders.set(HttpHeaders.AUTHORIZATION, AUTHORIZATION_HEADER_BEARER + " " + channelAccessToken);
+        log.info("{}", httpHeaders);
+        LineMessageRequest lineMessageRequest = new LineMessageRequest().setMessages(messages);
+
+        return restTemplate.exchange(
+                broadcastMessageUrl,
+                HttpMethod.POST,
+                new HttpEntity<>(lineMessageRequest, httpHeaders),
                 String.class
         );
     }
