@@ -48,23 +48,23 @@ public class TestController {
         return ResponseEntity.ok(payload);
     }
 
-//    @PostMapping("/v1/firestore")
-//    public ResponseEntity<String> testFireBase(@RequestBody String payload) throws ExecutionException, InterruptedException {
-//        DocumentReference docRef = firestore.collection("users").document("alovelace");
-//        // Add document data  with id "alovelace" using a hashmap
-//        Map<String, Object> data = new HashMap<>();
-//        data.put("first", payload);
-//        data.put("last", payload);
-//        data.put("born", 1815);
-//        //asynchronously write data
-//        ApiFuture<WriteResult> result = docRef.set(data);
-//        // ...
-//        // result.get() blocks on response
-//        System.out.println("Update time : " + result.get().getUpdateTime());
-//
-//        log.info("{}", payload);
-//        return ResponseEntity.ok(payload);
-//    }
+    @PostMapping("/v1/firebase")
+    public ResponseEntity<String> testFireBase(@RequestBody String payload) throws ExecutionException, InterruptedException {
+        DocumentReference docRef = firestore.collection("users").document("alovelace");
+        // Add document data  with id "alovelace" using a hashmap
+        Map<String, Object> data = new HashMap<>();
+        data.put("first", payload);
+        data.put("last", payload);
+        data.put("born", 1815);
+        //asynchronously write data
+        ApiFuture<WriteResult> result = docRef.set(data);
+        // ...
+        // result.get() blocks on response
+        System.out.println("Update time : " + result.get().getUpdateTime());
+
+        log.info("{}", payload);
+        return ResponseEntity.ok(payload);
+    }
 
     @GetMapping("/v1/config")
     public ResponseEntity<?> testConfig(){
