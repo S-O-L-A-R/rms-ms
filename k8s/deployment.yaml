@@ -29,8 +29,8 @@ spec:
         env:
         - name: GOOGLE_APPLICATION_CREDENTIALS
           value: /var/secrets/google/key.json
-        - name: application-secret
+        - name: line.channel-access-token
           valueFrom:
             secretKeyRef:
               name: rms-ms
-              key: application-secret
+              key: line.channel-access-token
