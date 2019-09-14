@@ -3,14 +3,12 @@ package com.solar.ms.rms.controller;
 
 import com.google.cloud.firestore.DocumentReference;
 import com.solar.ms.rms.model.CreateMenuItemRequest;
+import com.solar.ms.rms.model.RemoveMenuItemRequest;
 import com.solar.ms.rms.service.MenuItemService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.concurrent.ExecutionException;
 
@@ -23,9 +21,15 @@ public class MenuItemV1Controller {
     private MenuItemService menuItemService;
 
     @PostMapping
-    public ResponseEntity<?> createMenuItem(@RequestBody CreateMenuItemRequest request) throws ExecutionException, InterruptedException {
-        DocumentReference documentReference = menuItemService.insertMenuItem(request);
+    public ResponseEntity<?> addMenuItem(@RequestBody CreateMenuItemRequest request) throws ExecutionException, InterruptedException {
+        DocumentReference documentReference = menuItemService.addMenuItem(request);
 
-        return ResponseEntity.ok("OK");
+        return ResponseEntity.ok(documentReference.getPath());
     }
-}
+
+    @DeleteMapping
+    public ResponseEntity<?> removeMenuItem(@RequestBody RemoveMenuItemRequest request) throws ExecutionException, InterruptedException {
+        int documentReference = menuItemService.removeMenuItem(request);
+
+        return ResponseEntity.ok(documentReference);
+    }}
