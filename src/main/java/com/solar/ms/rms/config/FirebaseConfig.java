@@ -9,10 +9,7 @@ import com.google.firebase.cloud.FirestoreClient;
 import com.google.firebase.cloud.StorageClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
-import org.springframework.context.annotation.Profile;
+import org.springframework.context.annotation.*;
 import org.springframework.util.ResourceUtils;
 
 import java.io.FileInputStream;
@@ -30,7 +27,7 @@ public class FirebaseConfig {
     @Value("${firebase.storage-bucket}")
     private String storageBucket;
 
-    @Bean
+    @Bean(name = "firebaseApp")
     @Profile("local")
     public FirebaseApp getFirebaseAppLocal() throws IOException {
         InputStream serviceAccount = new FileInputStream(ResourceUtils.getFile("classpath:keys/firebase-sa.json"));
@@ -44,7 +41,7 @@ public class FirebaseConfig {
         return FirebaseApp.initializeApp(options);
     }
 
-    @Bean
+    @Bean(name = "firebaseApp")
     @Profile("deployment")
     public FirebaseApp getFirebaseAppDeployment() {
         GoogleCredentials credentials = GoogleCredentials.create(new AccessToken("MOCK", new Date()));
@@ -57,7 +54,7 @@ public class FirebaseConfig {
         return FirebaseApp.initializeApp(options);
     }
 
-    @Bean
+    @Bean(name = "firebaseApp")
     @ConditionalOnMissingBean
     public FirebaseApp getFirebaseApp() throws IOException {
         GoogleCredentials credentials = GoogleCredentials.getApplicationDefault();
@@ -71,11 +68,13 @@ public class FirebaseConfig {
     }
 
     @Bean
+    @DependsOn(value = "firebaseApp")
     public Firestore getFirestore(){
         return FirestoreClient.getFirestore();
     }
 
     @Bean
+    @DependsOn(value = "firebaseApp")
     public StorageClient getStorageClient(){
         return StorageClient.getInstance();
     }
