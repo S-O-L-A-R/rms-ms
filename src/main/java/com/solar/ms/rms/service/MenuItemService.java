@@ -36,7 +36,7 @@ public class MenuItemService {
         }else{
             QueryDocumentSnapshot queryDocumentSnapshot = list.get(0);
             DraftMenuItem draftMenuItem = queryDocumentSnapshot.toObject(DraftMenuItem.class);
-            list.get(0).getReference().update("amount", draftMenuItem.getQuantity() + 1).get();
+            list.get(0).getReference().update("quantity", draftMenuItem.getQuantity() + 1).get();
             return queryDocumentSnapshot.getReference();
         }
     }
