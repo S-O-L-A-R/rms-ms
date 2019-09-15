@@ -162,6 +162,10 @@ public class SummaryV1Controller {
 		DocumentSnapshot documentSnapshot = orderService.getOrderByOrderId(orderId);
 		Order order = documentSnapshot.toObject(Order.class);
 
+		if(order.getState().equalsIgnoreCase("PAID")){
+			return ResponseEntity.ok("PAID");
+		}
+
 		ConfirmPaymentRequest confirmRequest = new ConfirmPaymentRequest();
 		confirmRequest.setTransactionId(transactionId);
 		confirmRequest.setAmount(order.getTotal().getAmount());
@@ -174,7 +178,7 @@ public class SummaryV1Controller {
 
 		// PUSH NOTIFICATION TO USER
 		lineMessageService.sendPushMessage(order.getUserId(), Collections.singletonList(
-				new LineMessage("message", "ชำระเงินเสร็จสิ้น", false)
+				new LineMessage("text", "ชำระเงินเสร็จสิ้น", false)
 		));
 
 		return new ResponseEntity<>(HttpStatus.OK);
