@@ -1,8 +1,7 @@
 package com.solar.ms.rms.service;
 
-import com.solar.ms.rms.model.line.LineMessage;
-import com.solar.ms.rms.model.line.LineMessageRequest;
-import lombok.extern.slf4j.Slf4j;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -12,9 +11,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.List;
+import com.solar.ms.rms.model.line.LineMessage;
+import com.solar.ms.rms.model.line.LineMessageRequest;
 
 import static com.solar.ms.rms.config.CommonConstants.AUTHORIZATION_HEADER_BEARER;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
@@ -34,7 +36,7 @@ public class LineMessageService {
     private String broadcastMessageUrl;
 
     public ResponseEntity<String> sendPushMessage(String to, List<LineMessage> messages){
-        httpHeaders.set(HttpHeaders.AUTHORIZATION, AUTHORIZATION_HEADER_BEARER + channelAccessToken);
+        httpHeaders.set(HttpHeaders.AUTHORIZATION, AUTHORIZATION_HEADER_BEARER + " " + channelAccessToken);
         LineMessageRequest lineMessageRequest = new LineMessageRequest(to, messages);
 
         return restTemplate.exchange(
