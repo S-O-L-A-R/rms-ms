@@ -100,4 +100,11 @@ public class TestController {
 
         return ResponseEntity.ok("OK");
     }
+
+    @PostMapping("/v1/message/push")
+    public ResponseEntity<String> sendBroadcastMessage(@RequestBody LineMessageRequest lineMessageRequest){
+        lineMessageService.sendPushMessage(lineMessageRequest.getTo(), lineMessageRequest.getMessages());
+
+        return ResponseEntity.ok("OK");
+    }
 }
