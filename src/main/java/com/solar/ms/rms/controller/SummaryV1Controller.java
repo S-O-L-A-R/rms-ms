@@ -46,8 +46,6 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/v1/summary")
 @RestController
 public class SummaryV1Controller {
-	private static final String DRAFT_ORDER_ITEMS_COLLECTION = "draft-menu-items";
-
 	@Autowired
 	private Firestore firestore;
 
@@ -82,7 +80,7 @@ public class SummaryV1Controller {
 
 		ApiFuture<QuerySnapshot> draftMenuItemsFuture = firestore.collection("restaurants")
 				.document("restaurant-1")
-				.collection(DRAFT_ORDER_ITEMS_COLLECTION)
+				.collection("draft-menu-items")
 				.whereEqualTo("user.id", summaryRequest.getUserId())
 				.whereEqualTo("tableId", summaryRequest.getTableId())
 				.get();
@@ -170,7 +168,7 @@ public class SummaryV1Controller {
 		DocumentSnapshot documentSnapshot = orderService.getOrderByOrderId(orderId);
 		Order order = documentSnapshot.toObject(Order.class);
 
-		if(order.getState().equalsIgnoreCase("PAID")){
+		if (order.getState().equalsIgnoreCase("PAID")) {
 			return ResponseEntity.ok("PAID");
 		}
 
@@ -186,7 +184,7 @@ public class SummaryV1Controller {
 		// Clear draft menu items
 		ApiFuture<QuerySnapshot> draftMenuItemCollectionByUserId = firestore.collection("restaurants")
 				.document("restaurant-1")
-				.collection(DRAFT_ORDER_ITEMS_COLLECTION)
+				.collection("draft-menu-items")
 				.whereEqualTo("user.id", order.getUserId())
 				.get();
 
@@ -196,9 +194,8 @@ public class SummaryV1Controller {
 		}
 
 		// PUSH NOTIFICATION TO USER
-		lineMessageService.sendPushMessage(order.getUserId(), Collections.singletonList(
-				new LineMessage("text", "ชำระเงินเสร็จสิ้น", false)
-		));
+		lineMessageService.sendPushMessage(order.getUserId(),
+				Collections.singletonList(new LineMessage("text", "ชำระเงินเสร็จสิ้น", false)));
 
 		return new ResponseEntity<>(HttpStatus.OK);
 	}
