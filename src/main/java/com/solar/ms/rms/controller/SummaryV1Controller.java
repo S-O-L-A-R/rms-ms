@@ -8,11 +8,13 @@ import java.util.stream.Collectors;
 
 import com.solar.ms.rms.model.line.LineMessage;
 import com.solar.ms.rms.model.payment.ConfirmPaymentRequest;
+import com.solar.ms.rms.model.payment.ReservePaymentRequest;
 import com.solar.ms.rms.service.LineMessageService;
 import com.solar.ms.rms.service.OrderService;
 import com.solar.ms.rms.service.PaymentService;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -55,6 +57,9 @@ public class SummaryV1Controller {
 
 	@Autowired
 	private LineMessageService lineMessageService;
+
+	@Value("${service.rms-ms.payment-callback.url}")
+	private String paymentCallbackUrl;
 
 	@PostMapping
 	public ResponseEntity<Order> generateSummary(@RequestBody SummaryRequest summaryRequest)
@@ -136,9 +141,21 @@ public class SummaryV1Controller {
 		return ResponseEntity.ok(order);
 	}
 
+	@PostMapping(value = "/pay")
+	public ResponseEntity<?> payBill(@RequestBody SummaryRequest summaryRequest) throws ExecutionException, InterruptedException {
+		QueryDocumentSnapshot orderQueryDocument = orderService.getOrder(summaryRequest.getUserId(), summaryRequest.getTableId(), "PENDING");
+		Order order = orderQueryDocument.toObject(Order.class);
 
+		ReservePaymentRequest reservePaymentRequest = new ReservePaymentRequest();
+		reservePaymentRequest.setProductName("ค่าอาหาร");
+		reservePaymentRequest.setOrderId(orderQueryDocument.getId());
+		reservePaymentRequest.setAmount(order.getTotal().getAmount());
+		reservePaymentRequest.setConfirmUrl(paymentCallbackUrl);
 
-	@GetMapping(value = "/confirmation/callback")
+		return paymentService.reservePayment(reservePaymentRequest);
+	}
+
+	@GetMapping(value = "/pay/callback")
 	public ResponseEntity<?> paymentCallback(@RequestParam String transactionId, @RequestParam String orderId) throws ExecutionException, InterruptedException {
 		log.info("HEADERS: {}, transactionId: {}, orderId: {}", httpHeaders, transactionId, orderId);
 
@@ -153,7 +170,7 @@ public class SummaryV1Controller {
 
 		log.info("RESPONSE FROM LINE: {}", confirmationResponse);
 
-		documentSnapshot.getReference().update("state", "PAID");
+		documentSnapshot.getReference().update("state", "PAID").get();
 
 		// PUSH NOTIFICATION TO USER
 		lineMessageService.sendPushMessage(order.getUserId(), Collections.singletonList(
@@ -162,4 +179,5 @@ public class SummaryV1Controller {
 
 		return new ResponseEntity<>(HttpStatus.OK);
 	}
+
 }
