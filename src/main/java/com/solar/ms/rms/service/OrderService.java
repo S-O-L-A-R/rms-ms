@@ -14,13 +14,13 @@ public class OrderService {
     @Autowired
     private Firestore firestore;
 
-    public QueryDocumentSnapshot getOrder(String userId, String tableId, String status) throws ExecutionException, InterruptedException {
+    public QueryDocumentSnapshot getOrder(String userId, String tableId, String state) throws ExecutionException, InterruptedException {
         ApiFuture<QuerySnapshot> order = firestore.collection("restaurants")
                 .document("restaurant-1")
                 .collection("orders")
                 .whereEqualTo("userId", userId)
                 .whereEqualTo("tableId", tableId)
-                .whereEqualTo("status", status).get();
+                .whereEqualTo("state", state).get();
 
         return order.get().getDocuments().get(0);
     }
