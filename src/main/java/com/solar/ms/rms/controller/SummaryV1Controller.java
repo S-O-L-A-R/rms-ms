@@ -1,6 +1,6 @@
 package com.solar.ms.rms.controller;
 
-import java.util.Collections;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -28,7 +28,6 @@ import com.google.cloud.firestore.QueryDocumentSnapshot;
 import com.google.cloud.firestore.QuerySnapshot;
 import com.solar.ms.rms.model.SummaryRequest;
 import com.solar.ms.rms.model.firestore.DraftMenuItem;
-import com.solar.ms.rms.model.line.LineMessage;
 import com.solar.ms.rms.model.order.Menu;
 import com.solar.ms.rms.model.order.MenuItem;
 import com.solar.ms.rms.model.order.Order;
@@ -162,7 +161,7 @@ public class SummaryV1Controller {
 
 	@GetMapping(value = "/pay/callback")
 	public ResponseEntity<?> paymentCallback(@RequestParam String transactionId, @RequestParam String orderId)
-			throws ExecutionException, InterruptedException {
+			throws ExecutionException, InterruptedException, IOException {
 		log.info("HEADERS: {}, transactionId: {}, orderId: {}", httpHeaders, transactionId, orderId);
 
 		DocumentSnapshot documentSnapshot = orderService.getOrderByOrderId(orderId);
@@ -194,10 +193,10 @@ public class SummaryV1Controller {
 		}
 
 		// PUSH NOTIFICATION TO USER
-		lineMessageService.sendPushMessage(order.getUserId(),
-				Collections.singletonList(new LineMessage("text", "ชำระเงินเสร็จสิ้น", false)));
+//		lineMessageService.sendPushMessage(order.getUserId(),
+//				Collections.singletonList(new LineMessage("text", "ชำระเงินเสร็จสิ้น", false)));
+		lineMessageService.sendPushReceipt(order.getUserId(), "Too Slow To Wake", order.getTotal().getAmount());
 
 		return new ResponseEntity<>(HttpStatus.OK);
 	}
-
 }
