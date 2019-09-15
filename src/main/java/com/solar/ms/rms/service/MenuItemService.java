@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 @Slf4j
@@ -21,16 +22,23 @@ public class MenuItemService {
     public DocumentReference addMenuItem(CreateMenuItemRequest request) throws ExecutionException, InterruptedException {
         CollectionReference docRef = firestore.collection("restaurants").document("restaurant-1").collection("draft-menu-items");
 
-        DraftMenuItem draftMenuItem = new DraftMenuItem();
-        draftMenuItem.setQuantity(request.getQuantity());
-        draftMenuItem.setMemo(request.getMemo());
-        draftMenuItem.setMenuId(request.getMenuId());
-        draftMenuItem.setTableId(request.getTableId());
-        draftMenuItem.setUser(request.getUser());
+        List<QueryDocumentSnapshot> list = getDraftMenuItemList(request.getUser().getId(), request.getMenuId(), request.getMemo(), request.getTableId());
+        if(list.isEmpty()){
+            DraftMenuItem draftMenuItem = new DraftMenuItem();
+            draftMenuItem.setQuantity(request.getQuantity());
+            draftMenuItem.setMemo(request.getMemo());
+            draftMenuItem.setMenuId(request.getMenuId());
+            draftMenuItem.setTableId(request.getTableId());
+            draftMenuItem.setUser(request.getUser());
 
-        ApiFuture<DocumentReference> result = docRef.add(draftMenuItem);
-
-        return result.get();
+            ApiFuture<DocumentReference> result = docRef.add(draftMenuItem);
+            return result.get();
+        }else{
+            QueryDocumentSnapshot queryDocumentSnapshot = list.get(0);
+            DraftMenuItem draftMenuItem = queryDocumentSnapshot.toObject(DraftMenuItem.class);
+            list.get(0).getReference().update("amount", draftMenuItem.getQuantity() + 1).get();
+            return queryDocumentSnapshot.getReference();
+        }
     }
 
     public int removeMenuItem(RemoveMenuItemRequest request) throws ExecutionException, InterruptedException {
@@ -65,5 +73,17 @@ public class MenuItemService {
                 .whereEqualTo("tableId", tableId).get();
 
         return docRef.get().getDocuments().get(0);
+    }
+
+    public List<QueryDocumentSnapshot> getDraftMenuItemList(String userId, String menuId, String memo, String tableId) throws ExecutionException, InterruptedException {
+        ApiFuture<QuerySnapshot> docRef = firestore.collection("restaurants")
+                .document("restaurant-1")
+                .collection("draft-menu-items")
+                .whereEqualTo("user.id", userId)
+                .whereEqualTo("menuId", menuId)
+                .whereEqualTo("memo", memo)
+                .whereEqualTo("tableId", tableId).get();
+
+        return docRef.get().getDocuments();
     }
 }

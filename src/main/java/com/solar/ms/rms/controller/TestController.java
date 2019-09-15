@@ -88,7 +88,6 @@ public class TestController {
 
         log.info("{}", file.getOriginalFilename());
 
-
         storageClient.bucket().create(file.getOriginalFilename(), file.getInputStream());
 
         return ResponseEntity.ok("OK");
