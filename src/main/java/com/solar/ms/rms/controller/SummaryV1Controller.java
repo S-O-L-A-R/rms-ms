@@ -6,19 +6,18 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
-import com.solar.ms.rms.model.line.LineMessage;
-import com.solar.ms.rms.model.payment.ConfirmPaymentRequest;
-import com.solar.ms.rms.model.payment.ReservePaymentRequest;
-import com.solar.ms.rms.service.LineMessageService;
-import com.solar.ms.rms.service.OrderService;
-import com.solar.ms.rms.service.PaymentService;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.google.api.core.ApiFuture;
 import com.google.cloud.Timestamp;
@@ -29,11 +28,17 @@ import com.google.cloud.firestore.QueryDocumentSnapshot;
 import com.google.cloud.firestore.QuerySnapshot;
 import com.solar.ms.rms.model.SummaryRequest;
 import com.solar.ms.rms.model.firestore.DraftMenuItem;
+import com.solar.ms.rms.model.line.LineMessage;
 import com.solar.ms.rms.model.order.Menu;
 import com.solar.ms.rms.model.order.MenuItem;
 import com.solar.ms.rms.model.order.Order;
 import com.solar.ms.rms.model.order.OrderItem;
 import com.solar.ms.rms.model.order.OrderTotal;
+import com.solar.ms.rms.model.payment.ConfirmPaymentRequest;
+import com.solar.ms.rms.model.payment.ReservePaymentRequest;
+import com.solar.ms.rms.service.LineMessageService;
+import com.solar.ms.rms.service.OrderService;
+import com.solar.ms.rms.service.PaymentService;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,8 +46,6 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/v1/summary")
 @RestController
 public class SummaryV1Controller {
-	private static final String DRAFT_ORDER_ITEMS_COLLECTION = "draft-menu-items";
-
 	@Autowired
 	private Firestore firestore;
 
@@ -77,7 +80,7 @@ public class SummaryV1Controller {
 
 		ApiFuture<QuerySnapshot> draftMenuItemsFuture = firestore.collection("restaurants")
 				.document("restaurant-1")
-				.collection(DRAFT_ORDER_ITEMS_COLLECTION)
+				.collection("draft-menu-items")
 				.whereEqualTo("user.id", summaryRequest.getUserId())
 				.whereEqualTo("tableId", summaryRequest.getTableId())
 				.get();
@@ -142,8 +145,10 @@ public class SummaryV1Controller {
 	}
 
 	@PostMapping(value = "/pay")
-	public ResponseEntity<?> payBill(@RequestBody SummaryRequest summaryRequest) throws ExecutionException, InterruptedException {
-		QueryDocumentSnapshot orderQueryDocument = orderService.getOrder(summaryRequest.getUserId(), summaryRequest.getTableId(), "PENDING");
+	public ResponseEntity<?> payBill(@RequestBody SummaryRequest summaryRequest) throws ExecutionException,
+			InterruptedException {
+		QueryDocumentSnapshot orderQueryDocument = orderService.getOrder(summaryRequest.getUserId(), summaryRequest.getTableId(),
+				"PENDING");
 		Order order = orderQueryDocument.toObject(Order.class);
 
 		ReservePaymentRequest reservePaymentRequest = new ReservePaymentRequest();
@@ -156,13 +161,14 @@ public class SummaryV1Controller {
 	}
 
 	@GetMapping(value = "/pay/callback")
-	public ResponseEntity<?> paymentCallback(@RequestParam String transactionId, @RequestParam String orderId) throws ExecutionException, InterruptedException {
+	public ResponseEntity<?> paymentCallback(@RequestParam String transactionId, @RequestParam String orderId)
+			throws ExecutionException, InterruptedException {
 		log.info("HEADERS: {}, transactionId: {}, orderId: {}", httpHeaders, transactionId, orderId);
 
 		DocumentSnapshot documentSnapshot = orderService.getOrderByOrderId(orderId);
 		Order order = documentSnapshot.toObject(Order.class);
 
-		if(order.getState().equalsIgnoreCase("PAID")){
+		if (order.getState().equalsIgnoreCase("PAID")) {
 			return ResponseEntity.ok("PAID");
 		}
 
@@ -170,16 +176,26 @@ public class SummaryV1Controller {
 		confirmRequest.setTransactionId(transactionId);
 		confirmRequest.setAmount(order.getTotal().getAmount());
 
-		ResponseEntity<?> confirmationResponse =  paymentService.confirmPayment(confirmRequest);
-
+		ResponseEntity<?> confirmationResponse = paymentService.confirmPayment(confirmRequest);
 		log.info("RESPONSE FROM LINE: {}", confirmationResponse);
 
 		documentSnapshot.getReference().update("state", "PAID").get();
 
+		// Clear draft menu items
+		ApiFuture<QuerySnapshot> draftMenuItemCollectionByUserId = firestore.collection("restaurants")
+				.document("restaurant-1")
+				.collection("draft-menu-items")
+				.whereEqualTo("user.id", order.getUserId())
+				.get();
+
+		List<QueryDocumentSnapshot> draftMenuItemDocuments = draftMenuItemCollectionByUserId.get().getDocuments();
+		for (QueryDocumentSnapshot document : draftMenuItemDocuments) {
+			document.getReference().delete();
+		}
+
 		// PUSH NOTIFICATION TO USER
-		lineMessageService.sendPushMessage(order.getUserId(), Collections.singletonList(
-				new LineMessage("text", "ชำระเงินเสร็จสิ้น", false)
-		));
+		lineMessageService.sendPushMessage(order.getUserId(),
+				Collections.singletonList(new LineMessage("text", "ชำระเงินเสร็จสิ้น", false)));
 
 		return new ResponseEntity<>(HttpStatus.OK);
 	}
